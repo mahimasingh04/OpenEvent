@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  address       String    @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  profile       Profile?
+  events        Event[]   @relation("EventOrganizer")
+  participations Event[]  @relation("EventParticipant")
+  tickets       Ticket[]
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  name        String?
+  bio         String?
+  skills      String[]
+  socialLinks Json?
+  nftTokenId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  organizerId String
+  organizer   User     @relation("EventOrganizer", fields: [organizerId], references: [id])
+  participants User[]  @relation("EventParticipant")
+  tickets     Ticket[]
+  contractAddress String?
+  ipfsHash     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Ticket {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tokenId   String?
+  price     Float
+  status    TicketStatus
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TicketStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  CANCELLED
+} 
